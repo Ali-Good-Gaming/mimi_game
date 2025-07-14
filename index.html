@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мини-Игры | Камень-ножницы-бумага, Угадай число, Найди пару</title>
+    <style>
+        :root {
+            --primary: #6a11cb;
+            --secondary: #2575fc;
+            --accent: #ff3e6c;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --transition: all 0.3s ease;
+            --shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--light);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+            animation: fadeInDown 1s ease;
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 5px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(to right, #ff8a00, #e52e71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+        
+        .games-menu {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 30px 0;
+            animation: fadeInUp 1s ease;
+        }
+        
+        .game-btn {
+            background: var(--card-bg);
+            border: none;
+            border-radius: 15px;
+            padding: 15px 30px;
+            color: var(--light);
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow);
+            width: 220px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .game-btn:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .game-btn.active {
+            background: var(--accent);
+            box-shadow: 0 0 20px rgba(255, 62, 108, 0.5);
+        }
+        
+        .game-section {
+            display: none;
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow);
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .game-section.active {
+            display: block;
+        }
+        
+        .game-title {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 2rem;
+            color: #fff;
+        }
+        
+        /* Стили для игры "Камень-ножницы-бумага" */
+        .rps-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .choices {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .choice {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+            transition: var(--transition);
+            border: 3px solid transparent;
+            font-size: 4rem;
+        }
+        
+        .choice:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.05);
+        }
+        
+        .choice.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(255, 62, 108, 0.5);
+            transform: scale(1.1);
+        }
+        
+        .battle-area {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin: 40px 0;
+        }
+        
+        .player-area, .computer-area {
+            text-align: center;
+            width: 200px;
+        }
+        
+        .player-choice, .computer-choice {
+            font-size: 6rem;
+            margin: 20px 0;
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .vs {
+            display: flex;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+        
+        .result {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 20px 0;
+            min-height: 60px;
+        }
+        
+        .win {
+            color: var(--success);
+        }
+        
+        .lose {
+            color: var(--danger);
+        }
+        
+        .draw {
+            color: var(--warning);
+        }
+        
+        .play-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: block;
+            margin: 30px auto;
+            box-shadow: 0 5px 15px rgba(255, 62, 108, 0.4);
+        }
+        
+        .play-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(255, 62, 108, 0.6);
+        }
+        
+        /* Стили для игры "Угадай число" */
+        .guess-container {
+            text-align: center;
+        }
+        
+        .guess-input {
+            padding: 15px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 50px;
+            width: 200px;
+            text-align: center;
+            margin: 20px 0;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 2px solid transparent;
+        }
+        
+        .guess-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .hint {
+            margin: 20px 0;
+            font-size: 1.2rem;
+            min-height: 30px;
+        }
+        
+        /* Стили для игры "Найди пару" */
+        .memory-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .memory-card {
+            width: 100px;
+            height: 100px;
+            background: var(--secondary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+            transform: rotateY(180deg);
+            position: relative;
+        }
+        
+        .memory-card.flipped {
+            transform: rotateY(0deg);
+        }
+        
+        .memory-card .front, .memory-card .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+        }
+        
+        .memory-card .front {
+            background: var(--accent);
+            transform: rotateY(180deg);
+        }
+        
+        .memory-card .back {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+        
+        .memory-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            font-size: 1.2rem;
+        }
+        
+        /* Анимации */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-30px);}
+            60% {transform: translateY(-15px);}
+        }
+        
+        @keyframes shake {
+            0%, 100% {transform: translateX(0);}
+            20%, 60% {transform: translateX(-20px);}
+            40%, 80% {transform: translateX(20px);}
+        }
+        
+        .bounce {
+            animation: bounce 1s;
+        }
+        
+        .shake {
+            animation: shake 0.5s;
+        }
+        
+        .pulse {
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 30px;
+            opacity: 0.7;
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .games-menu {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .choices {
+                flex-wrap: wrap;
+            }
+            
+            .battle-area {
+                flex-direction: column;
+                align-items: center;
+                gap: 40px;
+            }
+            
+            .memory-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>МИНИ-ИГРЫ</h1>
+            <p class="subtitle">Наслаждайтесь коллекцией увлекательных мини-игр с красивой графикой и анимациями</p>
+        </header>
+        
+        <div class="games-menu">
+            <button class="game-btn active" data-game="rps">Камень-ножницы-бумага</button>
+            <button class="game-btn" data-game="guess">Угадай число</button>
+            <button class="game-btn" data-game="memory">Найди пару</button>
+        </div>
+        
+        <!-- Игра "Камень-ножницы-бумага" -->
+        <section id="rps" class="game-section active">
+            <h2 class="game-title">Камень-ножницы-бумага</h2>
+            <div class="rps-container">
+                <div class="choices">
+                    <div class="choice" data-choice="rock">✊</div>
+                    <div class="choice" data-choice="paper">✋</div>
+                    <div class="choice" data-choice="scissors">✌️</div>
+                </div>
+                
+                <div class="battle-area">
+                    <div class="player-area">
+                        <h3>Вы</h3>
+                        <div class="player-choice">❔</div>
+                    </div>
+                    
+                    <div class="vs">VS</div>
+                    
+                    <div class="computer-area">
+                        <h3>Компьютер</h3>
+                        <div class="computer-choice">❔</div>
+                    </div>
+                </div>
+                
+                <div class="result"></div>
+                
+                <button class="play-btn">Играть</button>
+            </div>
+        </section>
+        
+        <!-- Игра "Угадай число" -->
+        <section id="guess" class="game-section">
+            <h2 class="game-title">Угадай число</h2>
+            <div class="guess-container">
+                <p>Я загадал число от 1 до 100. Попробуй угадать!</p>
+                <input type="number" min="1" max="100" class="guess-input" placeholder="Введите число">
+                <button class="play-btn">Проверить</button>
+                <div class="hint"></div>
+                <div class="attempts">Попыток: 0</div>
+            </div>
+        </section>
+        
+        <!-- Игра "Найди пару" -->
+        <section id="memory" class="game-section">
+            <h2 class="game-title">Найди пару</h2>
+            <div class="memory-container">
+                <div class="memory-stats">
+                    <div class="moves">Ходы: <span>0</span></div>
+                    <div class="timer">Время: <span>0</span> сек</div>
+                </div>
+                
+                <div class="memory-grid">
+                    <!-- Карточки будут сгенерированы через JavaScript -->
+                </div>
+                
+                <button class="play-btn">Начать заново</button>
+            </div>
+        </section>
+        
+        <footer>
+            <p>© 2023 Мини-Игры | Создано с ❤️ для любителей игр</p>
+        </footer>
+    </div>
+    
+    <audio id="winSound" src="win.mp3" preload="auto"></audio>
+    <audio id="loseSound" src="lose.mp3" preload="auto"></audio>
+    <audio id="flipSound" src="flip.mp3" preload="auto"></audio>
+    <audio id="matchSound" src="match.mp3" preload="auto"></audio>
+    
+    <script>
+        // Переключение между играми
+        const gameBtns = document.querySelectorAll('.game-btn');
+        const gameSections = document.querySelectorAll('.game-section');
+        
+        gameBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Убираем активный класс со всех кнопок и секций
+                gameBtns.forEach(b => b.classList.remove('active'));
+                gameSections.forEach(s => s.classList.remove('active'));
+                
+                // Добавляем активный класс к текущей кнопке
+                btn.classList.add('active');
+                
+                // Показываем соответствующую секцию
+                const gameId = btn.getAttribute('data-game');
+                document.getElementById(gameId).classList.add('active');
+            });
+        });
+        
+        // Игра "Камень-ножницы-бумага"
+        const rpsChoices = document.querySelectorAll('.choice');
+        const playerChoiceEl = document.querySelector('.player-choice');
+        const computerChoiceEl = document.querySelector('.computer-choice');
+        const resultEl = document.querySelector('.result');
+        const playBtn = document.querySelector('#rps .play-btn');
+        const winSound = document.getElementById('winSound');
+        const loseSound = document.getElementById('loseSound');
+        
+        let playerChoice = null;
+        let computerChoice = null;
+        
+        rpsChoices.forEach(choice => {
+            choice.addEventListener('click', () => {
+                // Убираем выделение со всех вариантов
+                rpsChoices.forEach(c => c.classList.remove('selected'));
+                
+                // Выделяем выбранный вариант
+                choice.classList.add('selected');
+                playerChoice = choice.getAttribute('data-choice');
+            });
+        });
+        
+        playBtn.addEventListener('click', () => {
+            if (!playerChoice) {
+                resultEl.textContent = "Пожалуйста, выберите вариант!";
+                resultEl.className = "result";
+                return;
+            }
+            
+            // Сброс предыдущих результатов
+            playerChoiceEl.textContent = "❔";
+            computerChoiceEl.textContent = "❔";
+            resultEl.textContent = "";
+            resultEl.className = "result";
+            
+            // Анимация "тряски"
+            playerChoiceEl.classList.add('shake');
+            computerChoiceEl.classList.add('shake');
+            
+            // Скрываем результат и показываем анимацию
+            setTimeout(() => {
+                // Генерация выбора компьютера
+                const choices = ['rock', 'paper', 'scissors'];
+                computerChoice = choices[Math.floor(Math.random() * 3)];
+                
+                // Отображаем выборы
+                playerChoiceEl.textContent = getEmoji(playerChoice);
+                computerChoiceEl.textContent = getEmoji(computerChoice);
+                
+                // Убираем анимацию
+                playerChoiceEl.classList.remove('shake');
+                computerChoiceEl.classList.remove('shake');
+                
+                // Определяем победителя
+                determineWinner();
+            }, 1000);
+        });
+        
+        function getEmoji(choice) {
+            switch(choice) {
+                case 'rock': return '✊';
+                case 'paper': return '✋';
+                case 'scissors': return '✌️';
+                default: return '❔';
+            }
+        }
+        
+        function determineWinner() {
+            if (playerChoice === computerChoice) {
+                resultEl.textContent = "Ничья!";
+                resultEl.className = "result draw";
+                return;
+            }
+            
+            if (
+                (playerChoice === 'rock' && computerChoice === 'scissors') ||
+                (playerChoice === 'paper' && computerChoice === 'rock') ||
+                (playerChoice === 'scissors' && computerChoice === 'paper')
+            ) {
+                resultEl.textContent = "Вы победили! 🎉";
+                resultEl.className = "result win";
+                winSound.play();
+                resultEl.classList.add('bounce');
+                setTimeout(() => resultEl.classList.remove('bounce'), 1000);
+            } else {
+                resultEl.textContent = "Компьютер победил!";
+                resultEl.className = "result lose";
+                loseSound.play();
+                resultEl.classList.add('shake');
+                setTimeout(() => resultEl.classList.remove('shake'), 1000);
+            }
+        }
+        
+        // Игра "Угадай число"
+        const guessInput = document.querySelector('.guess-input');
+        const guessBtn = document.querySelector('#guess .play-btn');
+        const hintEl = document.querySelector('.hint');
+        const attemptsEl = document.querySelector('.attempts');
+        
+        let secretNumber = Math.floor(Math.random() * 100) + 1;
+        let attempts = 0;
+        
+        guessBtn.addEventListener('click', () => {
+            const userGuess = parseInt(guessInput.value);
+            
+            if (isNaN(userGuess) || userGuess < 1 || userGuess > 100) {
+                hintEl.textContent = "Пожалуйста, введите число от 1 до 100!";
+                hintEl.style.color = var(--warning);
+                return;
+            }
+            
+            attempts++;
+            attemptsEl.textContent = `Попыток: ${attempts}`;
+            
+            if (userGuess === secretNumber) {
+                hintEl.textContent = `Поздравляем! Вы угадали число ${secretNumber} за ${attempts} попыток!`;
+                hintEl.style.color = var(--success);
+                winSound.play();
+                guessInput.disabled = true;
+                guessBtn.textContent = "Играть снова";
+                guessBtn.addEventListener('click', resetGuessGame, { once: true });
+            } else if (userGuess < secretNumber) {
+                hintEl.textContent = "Слишком маленькое число! Попробуйте еще.";
+                hintEl.style.color = var(--warning);
+            } else {
+                hintEl.textContent = "Слишком большое число! Попробуйте еще.";
+                hintEl.style.color = var(--warning);
+            }
+            
+            guessInput.value = "";
+            guessInput.focus();
+        });
+        
+        function resetGuessGame() {
+            secretNumber = Math.floor(Math.random() * 100) + 1;
+            attempts = 0;
+            attemptsEl.textContent = "Попыток: 0";
+            hintEl.textContent = "";
+            guessInput.disabled = false;
+            guessBtn.textContent = "Проверить";
+            guessInput.focus();
+        }
+        
+        // Игра "Найди пару"
+        const memoryGrid = document.querySelector('.memory-grid');
+        const movesEl = document.querySelector('.moves span');
+        const timerEl = document.querySelector('.timer span');
+        const memoryPlayBtn = document.querySelector('#memory .play-btn');
+        const flipSound = document.getElementById('flipSound');
+        const matchSound = document.getElementById('matchSound');
+        
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+        let timer;
+        let seconds = 0;
+        let gameStarted = false;
+        
+        // Иконки для карточек (Font Awesome иконки)
+        const icons = ['🚀', '🌟', '🎯', '🎮', '🎲', '🎰', '🎳', '🕹️'];
+        
+        // Создаем пары карточек
+        function createCards() {
+            cards = [];
+            const pairs = [...icons, ...icons];
+            
+            // Перемешиваем карточки
+            while (pairs.length) {
+                const randomIndex = Math.floor(Math.random() * pairs.length);
+                cards.push(pairs.splice(randomIndex, 1)[0]);
+            }
+        }
+        
+        // Рендерим карточки
+        function renderCards() {
+            memoryGrid.innerHTML = "";
+            cards.forEach((icon, index) => {
+                const card = document.createElement('div');
+                card.classList.add('memory-card');
+                card.dataset.index = index;
+                
+                card.innerHTML = `
+                    <div class="front">${icon}</div>
+                    <div class="back">?</div>
+                `;
+                
+                card.addEventListener('click', flipCard);
+                memoryGrid.appendChild(card);
+            });
+        }
+        
+        // Функция переворота карточки
+        function flipCard() {
+            if (!gameStarted) {
+                startTimer();
+                gameStarted = true;
+            }
+            
+            const card = this;
+            
+            // Не переворачиваем уже совпавшие или перевернутые карточки
+            if (card.classList.contains('flipped') || flippedCards.length === 2) {
+                return;
+            }
+            
+            card.classList.add('flipped');
+            flippedCards.push(card);
+            flipSound.play();
+            
+            if (flippedCards.length === 2) {
+                moves++;
+                movesEl.textContent = moves;
+                
+                setTimeout(checkMatch, 500);
+            }
+        }
+        
+        // Проверка совпадения карточек
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            const icon1 = cards[card1.dataset.index];
+            const icon2 = cards[card2.dataset.index];
+            
+            if (icon1 === icon2) {
+                // Совпадение
+                card1.removeEventListener('click', flipCard);
+                card2.removeEventListener('click', flipCard);
+                matchSound.play();
+                matchedPairs++;
+                
+                // Пульсирующая анимация для совпавших карточек
+                card1.classList.add('pulse');
+                card2.classList.add('pulse');
+                setTimeout(() => {
+                    card1.classList.remove('pulse');
+                    card2.classList.remove('pulse');
+                }, 1000);
+                
+                // Проверка завершения игры
+                if (matchedPairs === icons.length) {
+                    setTimeout(endGame, 500);
+                }
+            } else {
+                // Не совпали - переворачиваем обратно
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                }, 500);
+            }
+            
+            flippedCards = [];
+        }
+        
+        // Запуск таймера
+        function startTimer() {
+            seconds = 0;
+            timer = setInterval(() => {
+                seconds++;
+                timerEl.textContent = seconds;
+            }, 1000);
+        }
+        
+        // Остановка таймера
+        function stopTimer() {
+            clearInterval(timer);
+        }
+        
+        // Завершение игры
+        function endGame() {
+            stopTimer();
+            winSound.play();
+            alert(`Поздравляем! Вы нашли все пары за ${moves} ходов и ${seconds} секунд!`);
+        }
+        
+        // Инициализация игры
+        function initMemoryGame() {
+            createCards();
+            renderCards();
+            moves = 0;
+            matchedPairs = 0;
+            movesEl.textContent = "0";
+            timerEl.textContent = "0";
+            flippedCards = [];
+            gameStarted = false;
+            stopTimer();
+        }
+        
+        // Кнопка "Начать заново"
+        memoryPlayBtn.addEventListener('click', initMemoryGame);
+        
+        // Запускаем игру при загрузке страницы
+        window.addEventListener('load', initMemoryGame);
+    </script>
+</body>
+</html>
